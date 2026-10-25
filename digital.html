@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBU - Data Science Subject Digital Library</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5ff',
+              100: '#e5edff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+              950: '#0f172a'
+            },
+            accent: {
+              purple: '#8b5cf6',
+              cyan: '#06b6d4',
+              emerald: '#10b981'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Glassmorphic elements */
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1);
+    }
+    .active-nav {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border-left: 4px solid #3b82f6;
+    }
+    #pdf-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      background: #071b1b;
+      color: #e2e8f0;
+    }
+    #pdf-reader.hidden {
+      display: none;
+    }
+    .pdf-reader-toolbar,
+    .pdf-reader-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem clamp(1rem, 3vw, 2.5rem);
+      background: rgba(10, 29, 30, 0.96);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .pdf-reader-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    #pdf-reader-title {
+      overflow: hidden;
+      font-size: 1rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pdf-reader-button {
+      display: inline-flex;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 0.75rem;
+      padding: 0.625rem 1rem;
+      background: #153536;
+      color: #e2e8f0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .pdf-reader-button:hover:not(:disabled) {
+      border-color: #2dd4bf;
+      background: #1d4b49;
+    }
+    .pdf-reader-button:focus-visible {
+      outline: 3px solid #2dd4bf;
+      outline-offset: 2px;
+    }
+    .pdf-reader-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+    .pdf-reader-stage {
+      display: flex;
+      min-height: 0;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: clamp(0.5rem, 2vw, 1.5rem);
+      background:
+        radial-gradient(ellipse at center, rgba(25, 91, 79, 0.6), transparent 68%),
+        #071b1b;
+    }
+    #pdf-flipbook {
+      width: min(100%, 1080px);
+      margin: auto;
+    }
+    #pdf-flipbook .stf__parent {
+      margin: auto;
+      border-radius: 0.4rem;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+    }
+    .pdf-flip-page {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: inset 0 0 22px rgba(15, 23, 42, 0.08);
+    }
+    .pdf-flip-page canvas {
+      display: block;
+      max-width: calc(100% - 2rem);
+      max-height: calc(100% - 2rem);
+      object-fit: contain;
+    }
+    #pdf-flipbook.pdf-single-page {
+      width: min(100%, 540px);
+      aspect-ratio: 0.78;
+      background: #fff;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+    }
+    #pdf-flipbook.pdf-single-page .pdf-flip-page {
+      width: 100%;
+      height: 100%;
+    }
+    #pdf-reader-status {
+      position: absolute;
+      z-index: 1;
+      max-width: min(90vw, 34rem);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(10, 29, 30, 0.96);
+      color: #e2e8f0;
+      text-align: center;
+    }
+    #pdf-reader-status[hidden] {
+      display: none;
+    }
+    .pdf-reader-controls {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      border-bottom: 0;
+    }
+    #pdf-page-count {
+      min-width: 8rem;
+      color: #cbd5e1;
+      font-size: 0.875rem;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+    @media (max-width: 640px) {
+      .pdf-reader-toolbar,
+      .pdf-reader-controls {
+        gap: 0.5rem;
+        padding: 0.75rem;
+      }
+      .pdf-reader-button {
+        min-height: 2.75rem;
+        padding: 0.625rem 0.75rem;
+      }
+      .pdf-reader-button .pdf-button-label {
+        display: none;
+      }
+      #pdf-reader-title {
+        font-size: 0.875rem;
+      }
+      #pdf-page-count {
+        min-width: 7rem;
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- MBU Brand Logo & Title -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+          <div class="bg-gradient-to-tr from-blue-700 via-indigo-600 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center font-bold text-xl text-white tracking-wider border border-white/20">
+            MBU
+          </div>
+          <div>
+            <h1 class="font-bold text-lg bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">
+              Mohan Babu University
+            </h1>
+            <p class="text-xs text-brand-500 font-semibold tracking-wide uppercase">Data Science Digital Library</p>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Items -->
+        <nav class="hidden md:flex space-x-1 lg:space-x-2">
+          <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-house text-xs"></i><span>Home</span>
+          </button>
+          <button onclick="switchTab('modules')" id="nav-modules" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-cubes text-xs"></i><span>Modules</span>
+          </button>
+          <button onclick="switchTab('tools')" id="nav-tools" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-wrench text-xs"></i><span>DS Tools</span>
+          </button>
+          <button onclick="switchTab('resources')" id="nav-resources" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-book-bookmark text-xs"></i><span>Resources</span>
+          </button>
+          <button onclick="switchTab('assignments')" id="nav-assignments" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-list-check text-xs"></i><span>Assignments</span>
+          </button>
+          <button onclick="switchTab('lab')" id="nav-lab" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-terminal text-xs"></i><span>Lab Experiments</span>
+          </button>
+        </nav>
+
+        <!-- Right User Profile Pill -->
+        <div class="flex items-center space-x-3">
+          <button onclick="switchTab('profile')" id="nav-profile-pill" class="flex items-center space-x-3 p-1.5 pl-3 rounded-full bg-slate-900/80 border border-slate-800 hover:border-brand-500/50 transition-all">
+            <span id="nav-user-name" class="text-xs font-medium text-slate-200 hidden sm:inline-block">V.S.Yojitha</span>
+            <img id="nav-profile-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-brand-500">
+          </button>
+
+          <!-- Mobile menu button -->
+          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 focus:outline-none">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900/95 px-4 pt-2 pb-4 space-y-1">
+      <button onclick="switchTab('home'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-house w-5"></i><span>Home</span>
+      </button>
+      <button onclick="switchTab('modules'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-cubes w-5"></i><span>Modules</span>
+      </button>
+      <button onclick="switchTab('tools'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-wrench w-5"></i><span>DS Tools</span>
+      </button>
+      <button onclick="switchTab('resources'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-book-bookmark w-5"></i><span>Resources</span>
+      </button>
+      <button onclick="switchTab('assignments'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-list-check w-5"></i><span>Assignments</span>
+      </button>
+      <button onclick="switchTab('lab'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-terminal w-5"></i><span>Lab Experiments</span>
+      </button>
+      <button onclick="switchTab('profile'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3">
+        <i class="fa-solid fa-user-gear w-5"></i><span>User Profile</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- 1. HOME / OVERVIEW SECTION -->
+    <section id="section-home" class="tab-content space-y-8">
+      <!-- Hero Banner -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border border-slate-800 p-8 sm:p-12 shadow-2xl">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-3xl space-y-4">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-semibold uppercase tracking-wider">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Mohan Babu University Academic Hub</span>
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Data Science <span class="bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">Digital Library & Lab</span>
+          </h2>
+          <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+            Welcome to the centralized repository for Data Science coursework, computational tools, interactive labs, and academic research papers designed specifically for CSE (Data Science) students at MBU.
+          </p>
+          <div class="pt-4 flex flex-wrap gap-4">
+            <button onclick="switchTab('lab')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-semibold text-sm hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-500/25 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-code"></i><span>Launch Interactive Lab</span>
+            </button>
+            <button onclick="switchTab('modules')" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm border border-slate-700 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-layer-group"></i><span>Explore Modules</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Navigation -->
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-xl font-bold text-white">Quick Navigation</h3>
+          <p class="text-sm text-slate-400">Choose a section to browse coursework, tools, assignments, and your profile.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <button type="button" onclick="switchTab('modules')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl"><i class="fa-solid fa-book-open"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">Study Modules</span>
+            <span class="mt-1 block text-sm leading-relaxed text-slate-400">Browse the five course modules, open the PDF notes, and find related YouTube lessons.</span>
+            <span class="mt-4 flex items-center justify-between text-xs font-semibold text-blue-400"><span><span id="quick-module-count">5</span> modules</span><span>Open modules <i class="fa-solid fa-arrow-right ml-1"></i></span></span>
+          </button>
+          <button type="button" onclick="switchTab('tools')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-xl"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">DS Tools Directory</span>
+            <span class="mt-1 block text-sm leading-relaxed text-slate-400">Explore Python, Pandas, NumPy, TensorFlow, PyTorch, and Jupyter with practical examples.</span>
+            <span class="mt-4 flex items-center justify-between text-xs font-semibold text-purple-400"><span><span id="quick-tool-count">6</span> tools</span><span>Explore tools <i class="fa-solid fa-arrow-right ml-1"></i></span></span>
+          </button>
+          <button type="button" onclick="switchTab('resources')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl"><i class="fa-solid fa-folder-open"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">Resources Library</span>
+            <span class="mt-1 block text-sm leading-relaxed text-slate-400">Open reference books, documentation, video courses, and other learning materials.</span>
+            <span class="mt-4 flex items-center justify-between text-xs font-semibold text-emerald-400"><span><span id="quick-resource-count">3</span> resources</span><span>View resources <i class="fa-solid fa-arrow-right ml-1"></i></span></span>
+          </button>
+          <button type="button" onclick="switchTab('assignments')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">Assignments</span>
+            <span class="mt-1 block text-sm leading-relaxed text-slate-400">Review guided practice tasks in data preparation, visualization, and machine learning.</span>
+            <span class="mt-4 flex items-center justify-between text-xs font-semibold text-amber-400"><span>3 PDFs + practice tasks</span><span>View assignments <i class="fa-solid fa-arrow-right ml-1"></i></span></span>
+          </button>
+          <button type="button" onclick="switchTab('lab')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-xl"><i class="fa-solid fa-flask"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">Lab Experiments</span>
+            <span class="mt-1 block text-sm leading-relaxed text-slate-400">Run interactive statistics, matrix, regression, and clustering experiments in the browser.</span>
+            <span class="mt-4 flex items-center justify-between text-xs font-semibold text-cyan-400"><span><span id="quick-lab-count">4</span> starter experiments</span><span>Open lab <i class="fa-solid fa-arrow-right ml-1"></i></span></span>
+          </button>
+          <button type="button" onclick="switchTab('profile')" class="glass-card p-5 rounded-2xl border border-slate-800 text-left group">
+            <span class="w-11 h-11 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center text-xl"><i class="fa-solid fa-user-graduate"></i></span>
+            <span class="mt-4 block text-lg font-semibold text-white">Student Profile</span>
+            <span id="quick-profile-info" class="mt-1 block text-sm leading-relaxed text-slate-400">View your student details, academic program, and profile photo.</span>
+            <span class="mt-4 flex items-center justify-end text-xs font-semibold text-pink-400">View profile <i class="fa-solid fa-arrow-right ml-1"></i></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div class="glass-panel p-5 rounded-2xl flex items-center space-x-4">
+          <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
+            <i class="fa-solid fa-book-open text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-medium">Active Modules</p>
+            <h3 id="stat-modules-count" class="text-2xl font-bold text-white">0</h3>
+          </div>
+        </div>
+        <div class="glass-panel p-5 rounded-2xl flex items-center space-x-4">
+          <div class="p-3 bg-purple-500/10 rounded-xl text-purple-400 border border-purple-500/20">
+            <i class="fa-solid fa-screws-all text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-medium">DS Tools</p>
+            <h3 id="stat-tools-count" class="text-2xl font-bold text-white">0</h3>
+          </div>
+        </div>
+        <div class="glass-panel p-5 rounded-2xl flex items-center space-x-4">
+          <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+            <i class="fa-solid fa-file-pdf text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-medium">Resources</p>
+            <h3 id="stat-resources-count" class="text-2xl font-bold text-white">0</h3>
+          </div>
+        </div>
+        <div class="glass-panel p-5 rounded-2xl flex items-center space-x-4">
+          <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20">
+            <i class="fa-solid fa-flask text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-medium">Lab Code</p>
+            <h3 id="stat-labs-count" class="text-2xl font-bold text-white">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Domains Covered -->
+      <div class="space-y-4">
+        <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-shapes text-brand-500"></i>
+          <span>Core Data Science Domains</span>
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">01</div>
+            <h4 class="text-lg font-semibold text-slate-100">Machine Learning & AI</h4>
+            <p class="text-sm text-slate-400">Supervised, unsupervised algorithms, model evaluation metrics, deep neural architectures, and optimization.</p>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">02</div>
+            <h4 class="text-lg font-semibold text-slate-100">Data Processing & EDA</h4>
+            <p class="text-sm text-slate-400">Exploratory Data Analysis, missing value imputation, normalization, feature engineering, and data cleaning.</p>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">03</div>
+            <h4 class="text-lg font-semibold text-slate-100">Big Data & Analytics</h4>
+            <p class="text-sm text-slate-400">Distributed computing models, SQL/NoSQL databases, data pipelines, and streaming real-time analytics.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MODULES SECTION (Add & View) -->
+    <section id="section-modules" class="tab-content hidden space-y-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white">Data Science Curriculum Modules</h2>
+          <p class="text-slate-400 text-sm">Browse academic modules or add custom syllabus components</p>
+        </div>
+        <button onclick="toggleModal('module-modal')" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm transition-all shadow-md shadow-brand-600/30 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-plus"></i><span>Add New Module</span>
+        </button>
+      </div>
+
+      <!-- Search & Filter Bar -->
+      <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
+          <input type="text" id="module-search" oninput="renderModules()" placeholder="Search modules by topic or title..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <select id="module-filter-category" onchange="renderModules()" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none focus:border-brand-500">
+          <option value="All">All Categories</option>
+          <option value="Core DS">Core DS</option>
+          <option value="Statistics">Statistics</option>
+          <option value="Machine Learning">Machine Learning</option>
+          <option value="Deep Learning">Deep Learning</option>
+          <option value="Data Engineering">Data Engineering</option>
+        </select>
+      </div>
+
+      <!-- Modules Grid -->
+      <div id="modules-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 3. TOOLS FOR DATA SCIENCE -->
+    <section id="section-tools" class="tab-content hidden space-y-8">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">Essential Data Science Tools</h2>
+        <p class="text-slate-400 text-sm">Frameworks, libraries, environments and platforms widely used in modern Data Science</p>
+      </div>
+
+      <!-- Search & Category Filters -->
+      <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
+          <input type="text" id="tool-search" oninput="renderTools()" placeholder="Search tools (e.g. PyTorch, Pandas)..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <select id="tool-filter-type" onchange="renderTools()" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none focus:border-brand-500">
+          <option value="All">All Categories</option>
+          <option value="Language">Languages</option>
+          <option value="Library">Libraries / Frameworks</option>
+          <option value="Visualization">Visualization</option>
+          <option value="Environment">IDEs & Tools</option>
+        </select>
+      </div>
+
+      <!-- Tools Grid -->
+      <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 4. RESOURCES SECTION (Add & View) -->
+    <section id="section-resources" class="tab-content hidden space-y-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white">Learning Resources Library</h2>
+          <p class="text-slate-400 text-sm">e-Books, research papers, video lectures, and official documentation links</p>
+        </div>
+        <button onclick="toggleModal('resource-modal')" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm transition-all shadow-md shadow-brand-600/30 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-plus"></i><span>Add New Resource</span>
+        </button>
+      </div>
+
+      <!-- Search & Type Filter -->
+      <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
+          <input type="text" id="resource-search" oninput="renderResources()" placeholder="Search resources by title or subject..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <select id="resource-filter-type" onchange="renderResources()" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none focus:border-brand-500">
+          <option value="All">All Types</option>
+          <option value="PDF">PDF / Book</option>
+          <option value="Video">Video Course</option>
+          <option value="Link">Web Link / Doc</option>
+        </select>
+      </div>
+
+      <!-- Resources Grid -->
+      <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 5. ASSIGNMENTS -->
+    <section id="section-assignments" class="tab-content hidden space-y-8">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">Data Science Assignments</h2>
+        <p class="text-slate-400 text-sm">Guided practice tasks to apply concepts from your course modules. These are practice activities; no due dates are assigned.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+          <div class="space-y-3">
+            <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Data Preparation</span>
+            <h3 class="text-lg font-bold text-white">Clean and Prepare a Dataset</h3>
+            <p class="text-sm leading-relaxed text-slate-400">Inspect a dataset, identify missing or inconsistent values, clean the data, and summarize the changes you made.</p>
+          </div>
+          <div class="flex flex-wrap gap-3 border-t border-slate-800/60 pt-4">
+            <button onclick="switchTab('modules')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Study Module 2 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+            <button onclick="switchTab('lab')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Open Lab <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
+        </article>
+        <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+          <div class="space-y-3">
+            <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Exploration & Visualization</span>
+            <h3 class="text-lg font-bold text-white">Explore and Visualize Data</h3>
+            <p class="text-sm leading-relaxed text-slate-400">Calculate descriptive statistics, identify patterns, and choose charts that communicate your findings clearly.</p>
+          </div>
+          <div class="flex flex-wrap gap-3 border-t border-slate-800/60 pt-4">
+            <button onclick="switchTab('modules')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Study Module 3 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+            <button onclick="switchTab('lab')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Open Lab <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
+        </article>
+        <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+          <div class="space-y-3">
+            <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Machine Learning</span>
+            <h3 class="text-lg font-bold text-white">Build a Prediction Model</h3>
+            <p class="text-sm leading-relaxed text-slate-400">Choose a prediction target, fit a simple regression model, and explain how you would evaluate its results.</p>
+          </div>
+          <div class="flex flex-wrap gap-3 border-t border-slate-800/60 pt-4">
+            <button onclick="switchTab('modules')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Study Module 4 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+            <button onclick="switchTab('lab')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">Open Lab <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
+        </article>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-xl font-bold text-white">Assignment PDFs</h3>
+          <p class="text-sm text-slate-400">Open an assignment to read it in the page-flipping viewer, or download the original PDF.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+            <div class="space-y-3">
+              <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">PDF Assignment</span>
+              <h3 class="text-lg font-bold text-white">Assignment 1</h3>
+              <p class="text-sm text-slate-400">Open the assignment in the interactive flipbook reader.</p>
+            </div>
+            <div class="flex flex-wrap gap-4 border-t border-slate-800/60 pt-4">
+              <a href="assignments/1.pdf" class="text-xs font-semibold text-brand-400 hover:text-brand-300"><i class="fa-solid fa-book-open mr-1"></i> Open in Flipbook</a>
+              <a href="assignments/1.pdf" download class="text-xs font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-download mr-1"></i> Download PDF</a>
+            </div>
+          </article>
+          <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+            <div class="space-y-3">
+              <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">PDF Assignment</span>
+              <h3 class="text-lg font-bold text-white">Assignment 2</h3>
+              <p class="text-sm text-slate-400">Open the assignment in the interactive flipbook reader.</p>
+            </div>
+            <div class="flex flex-wrap gap-4 border-t border-slate-800/60 pt-4">
+              <a href="assignments/2.pdf" class="text-xs font-semibold text-brand-400 hover:text-brand-300"><i class="fa-solid fa-book-open mr-1"></i> Open in Flipbook</a>
+              <a href="assignments/2.pdf" download class="text-xs font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-download mr-1"></i> Download PDF</a>
+            </div>
+          </article>
+          <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between gap-5">
+            <div class="space-y-3">
+              <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">PDF Assignment</span>
+              <h3 class="text-lg font-bold text-white">Assignment 3</h3>
+              <p class="text-sm text-slate-400">Open the assignment in the interactive flipbook reader.</p>
+            </div>
+            <div class="flex flex-wrap gap-4 border-t border-slate-800/60 pt-4">
+              <a href="assignments/3.pdf" class="text-xs font-semibold text-brand-400 hover:text-brand-300"><i class="fa-solid fa-book-open mr-1"></i> Open in Flipbook</a>
+              <a href="assignments/3.pdf" download class="text-xs font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-download mr-1"></i> Download PDF</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. INTERACTIVE LAB EXPERIMENTS (CODE SANDBOX) -->
+    <section id="section-lab" class="tab-content hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white">Interactive Data Science Sandbox</h2>
+          <p class="text-slate-400 text-sm">Execute Data Science algorithms, matrix math, statistical operations and view outputs live.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <select id="preset-experiments" onchange="loadPresetExperiment(this.value)" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            <option value="">-- Load Pre-built Experiment --</option>
+            <option value="exp-stats">1. Statistical Summary (Mean/Median/Std)</option>
+            <option value="exp-array">2. Vector & Matrix Operations</option>
+            <option value="exp-regression">3. Linear Regression Model Simulator</option>
+            <option value="exp-kmeans">4. K-Means Clustering Visualizer</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Lab Editor Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Code Editor & Controls Panel (8 Cols) -->
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+          <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[520px]">
+            <!-- Editor Top Header -->
+            <div class="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <input type="text" id="lab-exp-title" value="My Data Science Script" class="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-brand-500 text-sm font-semibold text-slate-200 focus:outline-none px-1">
+              </div>
+              <div class="flex items-center space-x-2">
+                <button onclick="runCode()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-600/20 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-play"></i><span>Run Code</span>
+                </button>
+                <button onclick="saveCurrentExperiment()" class="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-md shadow-brand-600/20 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-floppy-disk"></i><span>Save</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Code Input Textarea -->
+            <div class="relative flex-grow bg-slate-950 font-mono text-xs sm:text-sm">
+              <textarea id="code-editor" spellcheck="false" class="w-full h-full p-4 bg-transparent text-emerald-400 placeholder-slate-600 focus:outline-none resize-none leading-relaxed" placeholder="// Write or load Data Science JavaScript code here..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Output & Saved Experiments Sidebar (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+          
+          <!-- Terminal Console Output -->
+          <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[280px]">
+            <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
+                <i class="fa-solid fa-terminal text-brand-500"></i><span>Console Output</span>
+              </span>
+              <button onclick="clearConsole()" class="text-slate-500 hover:text-slate-300 text-xs">
+                <i class="fa-solid fa-trash-can"></i> Clear
+              </button>
+            </div>
+            <div id="console-output" class="flex-grow p-4 font-mono text-xs overflow-y-auto space-y-1.5 bg-slate-950 text-slate-300">
+              <div class="text-slate-500 italic">> Ready. Click 'Run Code' to execute.</div>
+            </div>
+          </div>
+
+          <!-- Saved Experiments List -->
+          <div class="glass-panel rounded-2xl border border-slate-800 p-4 flex flex-col h-[225px]">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
+              <i class="fa-solid fa-folder-bookmark text-purple-400"></i><span>Saved Experiments</span>
+            </h4>
+            <div id="saved-experiments-list" class="overflow-y-auto flex-grow space-y-2 pr-1">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 7. USER PROFILE SECTION -->
+    <section id="section-profile" class="tab-content hidden space-y-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+          
+          <!-- Cover Banner -->
+          <div class="h-36 sm:h-48 bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 relative">
+            <div class="absolute inset-0 bg-black/20"></div>
+          </div>
+
+          <!-- Profile Details & Edit Area -->
+          <div class="px-6 sm:px-10 pb-10 relative">
+            
+            <!-- Photo & Primary Info Header -->
+            <div class="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-6 -mt-16 sm:-mt-20 mb-8">
+              <div class="relative group">
+                <img id="profile-img-display" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" alt="Profile Picture" class="w-32 h-32 rounded-2xl object-cover border-4 border-slate-950 shadow-xl bg-slate-900">
+                <label for="profile-photo-input" class="absolute bottom-2 right-2 bg-brand-600 hover:bg-brand-500 text-white p-2 rounded-xl shadow-lg cursor-pointer transition-all">
+                  <i class="fa-solid fa-camera text-xs"></i>
+                </label>
+                <input type="file" id="profile-photo-input" accept="image/*" onchange="handlePhotoUpload(event)" class="hidden">
+              </div>
+
+              <div class="text-center sm:text-left flex-grow">
+                <h2 id="profile-name-heading" class="text-2xl sm:text-3xl font-bold text-white">V.S.Yojitha</h2>
+                <p id="profile-program-heading" class="text-brand-400 font-medium text-sm">B.Tech - CSE (Data Science)</p>
+                <p id="profile-institution-heading" class="text-slate-400 text-xs">Mohan Babu University (MBU)</p>
+              </div>
+
+              <div>
+                <button onclick="toggleEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition-all flex items-center space-x-2">
+                  <i class="fa-solid fa-pen-to-square"></i><span>Edit Profile</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Profile Field Details Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-6 border-t border-slate-800">
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Student Full Name</p>
+                <p id="disp-profile-name" class="text-slate-200 font-medium text-base">V.S.Yojitha</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Roll / Student ID</p>
+                <p id="disp-profile-roll" class="text-slate-200 font-medium text-base">Not provided</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Current Semester / Year</p>
+                <p id="disp-profile-semester" class="text-slate-200 font-medium text-base">Not provided</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Faculty Name</p>
+                <p id="disp-profile-faculty" class="text-slate-200 font-medium text-base">Not provided</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Degree</p>
+                <p id="disp-profile-degree" class="text-slate-200 font-medium text-base">B.Tech - CSE (Data Science)</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Branch</p>
+                <p id="disp-profile-branch" class="text-slate-200 font-medium text-base">Computer Science & Engineering</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Specialization</p>
+                <p id="disp-profile-specialization" class="text-slate-200 font-medium text-base">Data Science</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Institution</p>
+                <p id="disp-profile-institution" class="text-slate-200 font-medium text-base">Mohan Babu University</p>
+              </div>
+
+              <div class="space-y-1 sm:col-span-2 lg:col-span-1">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Email Address</p>
+                <a id="disp-profile-email" class="text-brand-400 hover:text-brand-300 font-medium text-base">Not provided</a>
+              </div>
+
+              <div class="space-y-1 sm:col-span-2 lg:col-span-3">
+                <p class="text-xs text-slate-500 font-semibold uppercase">Student Academic Bio</p>
+                <p id="disp-profile-bio" class="text-slate-300 text-sm leading-relaxed">
+                  Passionate Data Science student at Mohan Babu University focusing on machine learning, predictive statistical modeling, deep neural networks, and scalable data pipeline engineering.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6 border-t border-slate-800 pt-5">
+              <p class="mb-3 text-xs font-semibold uppercase text-slate-500">Professional Links</p>
+              <div class="flex flex-wrap gap-3">
+                <a id="disp-profile-linkedin" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>
+                <a id="disp-profile-github" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-brands fa-github"></i> GitHub</a>
+                <a id="disp-profile-resume" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-solid fa-file-lines"></i> Resume</a>
+                <span id="disp-profile-links-empty" class="text-sm text-slate-500">Add LinkedIn, GitHub, or resume links using Edit Profile.</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <section id="pdf-reader" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-reader-title" aria-describedby="pdf-reader-status">
+    <header class="pdf-reader-toolbar">
+      <h2 id="pdf-reader-title">PDF Flipbook</h2>
+      <button type="button" id="pdf-reader-close-top" class="pdf-reader-button" aria-label="Close PDF reader">
+        <i class="fa-solid fa-arrow-left"></i><span class="pdf-button-label">Close Reader</span>
+      </button>
+    </header>
+    <div class="pdf-reader-stage">
+      <div id="pdf-reader-status" role="status" aria-live="polite">Loading PDF…</div>
+      <div id="pdf-flipbook" aria-label="PDF pages"></div>
+    </div>
+    <footer class="pdf-reader-controls">
+      <button type="button" id="pdf-reader-previous" class="pdf-reader-button" aria-label="Previous pages" disabled>
+        <i class="fa-solid fa-chevron-left"></i><span class="pdf-button-label">Previous</span>
+      </button>
+      <span id="pdf-page-count" aria-live="polite">Pages —</span>
+      <button type="button" id="pdf-reader-next" class="pdf-reader-button" aria-label="Next pages" disabled>
+        <span class="pdf-button-label">Next</span><i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <a id="pdf-reader-original" class="pdf-reader-button" href="#" target="_blank" rel="noopener noreferrer" aria-label="Open original PDF in new tab">
+        <i class="fa-solid fa-up-right-from-square"></i><span class="pdf-button-label">Open Original PDF</span>
+      </a>
+      <button type="button" id="pdf-reader-close" class="pdf-reader-button" aria-label="Close PDF reader">
+        <i class="fa-solid fa-xmark"></i><span class="pdf-button-label">Close Reader</span>
+      </button>
+    </footer>
+  </section>
+
+  <!-- MODAL: ADD MODULE -->
+  <div id="module-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-slate-800 space-y-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-cube text-brand-500"></i><span>Add New DS Module</span>
+        </h3>
+        <button onclick="toggleModal('module-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="form-add-module" onsubmit="handleAddModule(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Module Title</label>
+          <input type="text" id="mod-title" required placeholder="e.g. Statistical Inference & Hypothesis Testing" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Topic / Subject</label>
+            <input type="text" id="mod-topic" required placeholder="e.g. Inferential Stats" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Category</label>
+            <select id="mod-category" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+              <option value="Core DS">Core DS</option>
+              <option value="Statistics">Statistics</option>
+              <option value="Machine Learning">Machine Learning</option>
+              <option value="Deep Learning">Deep Learning</option>
+              <option value="Data Engineering">Data Engineering</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">PDF / Notes Link (optional)</label>
+          <input type="url" id="mod-pdf" placeholder="https://... or a local PDF URL" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">YouTube Link</label>
+          <input type="url" id="mod-youtube" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Description</label>
+          <textarea id="mod-desc" rows="3" required placeholder="Brief summary of module contents..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500"></textarea>
+        </div>
+        <div class="pt-2 flex justify-end space-x-3">
+          <button type="button" onclick="toggleModal('module-modal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm">Save Module</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD RESOURCE -->
+  <div id="resource-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-slate-800 space-y-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-file-circle-plus text-emerald-500"></i><span>Add New Resource</span>
+        </h3>
+        <button onclick="toggleModal('resource-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="form-add-resource" onsubmit="handleAddResource(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Resource Title</label>
+          <input type="text" id="res-title" required placeholder="e.g. Elements of Statistical Learning (Book)" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Resource Type</label>
+            <select id="res-type" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+              <option value="PDF">PDF / Book</option>
+              <option value="Video">Video Lecture</option>
+              <option value="Link">Web Link / Article</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Subject Tag</label>
+            <input type="text" id="res-tag" required placeholder="e.g. ML Theory" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">URL / Link</label>
+          <input type="url" id="res-url" placeholder="https://... (or upload a file below)" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          <label class="block text-xs font-semibold text-slate-400 mb-1">
+  Upload File (PDF, Notes, Documents)
+</label>
+<input
+  type="file"
+  id="res-file"
+  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+  class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm"
+/>
+
+        </div>
+
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Description</label>
+          <textarea id="res-desc" rows="3" required placeholder="Short summary of the learning material..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500"></textarea>
+        </div>
+        <p id="resource-form-error" role="alert" class="text-sm text-red-400"></p>
+        <div class="pt-2 flex justify-end space-x-3">
+          <button type="button" onclick="toggleModal('resource-modal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm">Save Resource</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT PROFILE -->
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-slate-800 space-y-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-user-pen text-brand-500"></i><span>Edit Student Profile</span>
+        </h3>
+        <button onclick="toggleEditProfileModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="form-edit-profile" onsubmit="handleSaveProfile(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Full Name</label>
+          <input type="text" id="input-prof-name" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Roll / Student ID</label>
+            <input type="text" id="input-prof-roll" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Degree Program</label>
+            <input type="text" id="input-prof-degree" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Current Semester / Year</label>
+            <input type="text" id="input-prof-semester" placeholder="e.g. 3rd Year" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Faculty Name</label>
+            <input type="text" id="input-prof-faculty" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Institution Name</label>
+            <input type="text" id="input-prof-institution" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Email</label>
+            <input type="email" id="input-prof-email" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Branch</label>
+            <input type="text" id="input-prof-branch" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Specialization</label>
+            <input type="text" id="input-prof-specialization" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">LinkedIn URL</label>
+            <input type="url" id="input-prof-linkedin" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">GitHub URL</label>
+            <input type="url" id="input-prof-github" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Resume URL</label>
+            <input type="url" id="input-prof-resume" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Academic Bio</label>
+          <textarea id="input-prof-bio" rows="3" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500"></textarea>
+        </div>
+        <div class="pt-2 flex justify-end space-x-3">
+          <button type="button" onclick="toggleEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm">Save Profile Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- INITIAL MOCK DATA ---
+    const initialModules = [
+      { id: 1, title: 'Module 1: Introduction to Data Science', topic: 'Introduction to Data Science', category: 'Core DS', desc: 'An introduction to data science concepts, the data lifecycle, data preparation, and foundational analytical methods.', pdf: 'modules/module-1-introduction-to-data-science.pdf', youtube: 'https://www.youtube.com/results?search_query=Introduction+to+Data+Science+course' },
+      { id: 2, title: 'Module 2: Data Collection & Preprocessing', topic: 'Data Collection and Preprocessing', category: 'Core DS', desc: 'Methods for collecting data, preparing datasets, handling missing values, and transforming data for analysis.', pdf: 'modules/module-2-data-collection-preprocessing.pdf', youtube: 'https://www.youtube.com/results?search_query=data+collection+and+preprocessing+data+science' },
+      { id: 3, title: 'Module 3: Exploratory Data Analysis & Visualization', topic: 'Exploratory Data Analysis and Visualization', category: 'Core DS', desc: 'Explore datasets with descriptive statistics and visualization techniques to identify patterns, trends, and relationships.', pdf: 'modules/module-3-exploratory-data-analysis-visualization.pdf', youtube: 'https://www.youtube.com/results?search_query=exploratory+data+analysis+and+data+visualization' },
+      { id: 4, title: 'Module 4: Statistics & Machine Learning', topic: 'Statistics and Machine Learning', category: 'Machine Learning', desc: 'Build a foundation in statistical reasoning and machine learning methods for analyzing data and making predictions.', pdf: 'modules/module-4-statistics-machine-learning.pdf', youtube: 'https://www.youtube.com/results?search_query=statistics+and+machine+learning+course' },
+      { id: 5, title: 'Module 5: Advanced Data Science Applications', topic: 'Advanced Data Science Applications', category: 'Core DS', desc: 'Explore advanced data science approaches and their applications to real-world problems.', pdf: 'modules/module-5-advanced-data-science-applications.pdf', youtube: 'https://www.youtube.com/results?search_query=advanced+data+science+applications' }
+    ];
+
+    const initialTools = [
+      { name: 'Python', category: 'Language', icon: 'fa-brands fa-python', desc: 'Primary language for Data Science, ML modeling, and rapid prototyping.', snippet: 'import numpy as np\nimport pandas as pd\ndf = pd.read_csv("data.csv")', docs: 'https://docs.python.org/3/' },
+      { name: 'Pandas', category: 'Library', icon: 'fa-solid fa-table', desc: 'High-performance data manipulation and analysis library for structured data.', snippet: 'df.groupby("category")["sales"].mean()', docs: 'https://pandas.pydata.org/docs/' },
+      { name: 'NumPy', category: 'Library', icon: 'fa-solid fa-calculator', desc: 'Fundamental package for scientific computing and multi-dimensional array operations.', snippet: 'arr = np.array([1, 2, 3])\nmean_val = np.mean(arr)', docs: 'https://numpy.org/doc/stable/' },
+      { name: 'Matplotlib', category: 'Visualization', icon: 'fa-solid fa-chart-line', desc: 'Create static, animated, and interactive visualizations with Python.', snippet: 'import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [4, 5, 6])\nplt.show()', docs: 'https://matplotlib.org/stable/gallery/index.html', docsLabel: 'View Gallery' },
+      { name: 'TensorFlow', category: 'Library', icon: 'fa-solid fa-brain', desc: 'End-to-end open source platform for machine learning and deep neural networks.', snippet: 'model = tf.keras.Sequential([\n  tf.keras.layers.Dense(64, activation="relu")\n])', docs: 'https://www.tensorflow.org/guide' },
+      { name: 'PyTorch', category: 'Library', icon: 'fa-solid fa-fire-flame-curved', desc: 'Flexible deep learning framework powered by dynamic computation graphs.', snippet: 'x = torch.tensor([1.0, 2.0], requires_grad=True)', docs: 'https://docs.pytorch.org/docs/stable/' },
+      { name: 'Jupyter Notebook', category: 'Environment', icon: 'fa-solid fa-book-open', desc: 'Interactive web application for creating and sharing documents containing live code.', snippet: '%matplotlib inline\nplt.plot([1, 2, 3], [4, 5, 6])', docs: 'https://jupyter.org/', docsLabel: 'Official Site' }
+    ];
+
+    const initialResources = [
+      { id: 1, title: 'Python for Data Analysis (3rd Edition)', type: 'Link', tag: 'Data Wrangling', url: 'https://pandas.pydata.org/docs/', desc: 'Essential guide for manipulating, processing, and cleaning datasets in Python.' },
+      { id: 2, title: 'Stanford CS229: Machine Learning Lecture Series', type: 'Video', tag: 'ML Theory', url: 'https://www.youtube.com/results?search_query=Stanford+CS229+machine+learning+lectures', desc: 'Stanford course lectures covering machine learning theory, algorithms, and applications.' },
+      { id: 3, title: 'Scikit-learn User Guide', type: 'Link', tag: 'Machine Learning', url: 'https://scikit-learn.org/stable/user_guide.html', desc: 'Official guides and examples for building machine learning models with scikit-learn.' },
+      { id: 4, title: 'Kaggle Learn: Data Science Courses', type: 'Link', tag: 'Practice', url: 'https://www.kaggle.com/learn', desc: 'Short, hands-on courses in Python, Pandas, data visualization, and machine learning.' },
+      { id: 5, title: 'Google Machine Learning Crash Course', type: 'Link', tag: 'Machine Learning', url: 'https://developers.google.com/machine-learning/crash-course', desc: 'Practical introduction to core machine learning concepts with interactive exercises.' },
+      { id: 6, title: 'UCI Machine Learning Repository', type: 'Link', tag: 'Datasets', url: 'https://archive.ics.uci.edu/', desc: 'Browse datasets for data exploration, coursework, and machine learning projects.' },
+      { id: 7, title: 'Google Colab', type: 'Link', tag: 'Python Notebooks', url: 'https://colab.research.google.com/', desc: 'Run Python notebooks in your browser and experiment without local setup.' },
+      { id: 8, title: 'Python Official Tutorial', type: 'Link', tag: 'Python', url: 'https://docs.python.org/3/tutorial/', desc: 'The official Python tutorial covering syntax, data structures, modules, and more.' },
+      { id: 9, title: 'NumPy Learn', type: 'Link', tag: 'Numerical Computing', url: 'https://numpy.org/learn/', desc: 'Official NumPy learning materials, tutorials, and educational resources.' },
+      { id: 10, title: 'Matplotlib Tutorials', type: 'Link', tag: 'Visualization', url: 'https://matplotlib.org/stable/tutorials/index.html', desc: 'Official tutorials for creating plots and visualizing data with Matplotlib.' },
+      { id: 11, title: 'TensorFlow Tutorials', type: 'Link', tag: 'Deep Learning', url: 'https://www.tensorflow.org/tutorials', desc: 'Step-by-step official tutorials for TensorFlow and Keras machine learning workflows.' },
+      { id: 12, title: 'StatQuest: Statistics and Machine Learning', type: 'Video', tag: 'Statistics', url: 'https://www.youtube.com/@statquest', desc: 'Visual video lessons that explain statistics, machine learning, and related concepts.' },
+      { id: 13, title: 'Jupyter Notebook Documentation', type: 'Link', tag: 'Notebooks', url: 'https://docs.jupyter.org/en/latest/', desc: 'Official documentation for using and managing Jupyter notebooks.' }
+    ];
+
+    const sampleExperiments = {
+      'exp-stats': `// Statistical Summary Calculation
+const data = [12, 45, 67, 23, 89, 34, 56, 78, 90, 11, 44, 55];
+
+function calculateStats(arr) {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const sum = arr.reduce((acc, v) => acc + v, 0);
+  const mean = sum / arr.length;
+  
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  
+  const variance = arr.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / arr.length;
+  const stdDev = Math.sqrt(variance);
+  
+  return { count: arr.length, mean: mean.toFixed(2), median, stdDev: stdDev.toFixed(2) };
+}
+
+console.log("=== DATASET STATISTICAL REPORT ===");
+console.log("Dataset:", data);
+console.log("Results:", calculateStats(data));`,
+
+      'exp-array': `// Matrix Operations & Vector Multiplication
+const matrixA = [
+  [1, 2],
+  [3, 4]
+];
+
+const matrixB = [
+  [5, 6],
+  [7, 8]
+];
+
+function multiply2x2(A, B) {
+  return [
+    [A[0][0]*B[0][0] + A[0][1]*B[1][0], A[0][0]*B[0][1] + A[0][1]*B[1][1]],
+    [A[1][0]*B[0][0] + A[1][1]*B[1][0], A[1][0]*B[0][1] + A[1][1]*B[1][1]]
+  ];
+}
+
+console.log("Matrix A:", JSON.stringify(matrixA));
+console.log("Matrix B:", JSON.stringify(matrixB));
+console.log("Matrix Dot Product A x B:", JSON.stringify(multiply2x2(matrixA, matrixB)));`,
+
+      'exp-regression': `// Linear Regression Slope & Intercept Simulator (y = mx + c)
+const points = [{x: 1, y: 2}, {x: 2, y: 3}, {x: 3, y: 5}, {x: 4, y: 4}, {x: 5, y: 6}];
+
+function simpleLinearRegression(pts) {
+  const n = pts.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  
+  pts.forEach(p => {
+    sumX += p.x;
+    sumY += p.y;
+    sumXY += p.x * p.y;
+    sumXX += p.x * p.x;
+  });
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  
+  return { slope: slope.toFixed(3), intercept: intercept.toFixed(3) };
+}
+
+const model = simpleLinearRegression(points);
+console.log("Trained Regression Model:");
+console.log(\`Equation: y = \${model.slope} * x + \${model.intercept}\`);
+console.log("Prediction for x = 6:", (parseFloat(model.slope) * 6 + parseFloat(model.intercept)).toFixed(2));`,
+
+      'exp-kmeans': `// 1D K-Means Clustering Concept Simulation
+const dataPoints = [2, 4, 10, 12, 3, 20, 30, 11, 25];
+let k1 = 2, k2 = 20; // Initial Centroids
+
+for (let iter = 1; iter <= 3; iter++) {
+  let cluster1 = [], cluster2 = [];
+  dataPoints.forEach(p => {
+    Math.abs(p - k1) < Math.abs(p - k2) ? cluster1.push(p) : cluster2.push(p);
+  });
+  k1 = cluster1.reduce((a,b)=>a+b,0)/cluster1.length;
+  k2 = cluster2.reduce((a,b)=>a+b,0)/cluster2.length;
+  console.log(\`Iteration \${iter}:\`);
+  console.log(\`  Cluster 1 (Centroid \${k1.toFixed(1)}): \`, cluster1);
+  console.log(\`  Cluster 2 (Centroid \${k2.toFixed(1)}): \`, cluster2);
+}`
+    };
+
+    const initialProfile = {
+      name: 'V.S.Yojitha',
+      roll: '',
+      degree: 'B.Tech - CSE (Data Science)',
+      institution: 'Mohan Babu University',
+      email: '',
+      semester: '',
+      faculty: '',
+      branch: 'Computer Science & Engineering',
+      specialization: 'Data Science',
+      linkedin: '',
+      github: '',
+      resume: '',
+      bio: 'Passionate Data Science student at Mohan Babu University focusing on machine learning, predictive statistical modeling, deep neural networks, and scalable data pipeline engineering.',
+      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'
+    };
+
+    // --- STATE MANAGEMENT ---
+    const savedModules = JSON.parse(localStorage.getItem('mbu_ds_modules'));
+    let modules = savedModules || initialModules;
+    if (localStorage.getItem('mbu_ds_modules_version') !== 'curriculum-v3') {
+      const defaultModuleIds = new Set(initialModules.map(module => module.id));
+      modules = [...initialModules, ...modules.filter(module => !defaultModuleIds.has(module.id))];
+      localStorage.setItem('mbu_ds_modules', JSON.stringify(modules));
+      localStorage.setItem('mbu_ds_modules_version', 'curriculum-v3');
+    }
+    let tools = initialTools;
+    const savedResources = JSON.parse(localStorage.getItem('mbu_ds_resources')) || [];
+    const defaultResourceIds = new Set(initialResources.map(resource => resource.id));
+    let resources = [...initialResources, ...savedResources.filter(resource => !defaultResourceIds.has(resource.id))];
+    if (localStorage.getItem('mbu_ds_resources_version') !== 'resources-v2') {
+      localStorage.setItem('mbu_ds_resources', JSON.stringify(resources));
+      localStorage.setItem('mbu_ds_resources_version', 'resources-v2');
+    }
+    let savedExperiments = JSON.parse(localStorage.getItem('mbu_ds_experiments')) || [
+      { id: 101, title: 'Sample Stats Test', code: sampleExperiments['exp-stats'] }
+    ];
+    let userProfile = { ...initialProfile, ...(JSON.parse(localStorage.getItem('mbu_ds_profile')) || {}) };
+
+    // --- NAVIGATION CONTROLLER ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active-nav'));
+
+      const selectedTab = document.getElementById(`section-${tabId}`);
+      if (selectedTab) selectedTab.classList.remove('hidden');
+
+      const selectedNav = document.getElementById(`nav-${tabId}`);
+      if (selectedNav) selectedNav.classList.add('active-nav');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.toggle('hidden');
+    }
+
+    // --- UPDATE DASHBOARD METRICS ---
+    function updateMetrics() {
+      document.getElementById('stat-modules-count').innerText = modules.length;
+      document.getElementById('stat-tools-count').innerText = tools.length;
+      document.getElementById('stat-resources-count').innerText = resources.length;
+      document.getElementById('stat-labs-count').innerText = savedExperiments.length;
+      document.getElementById('quick-module-count').innerText = modules.length;
+      document.getElementById('quick-tool-count').innerText = tools.length;
+      document.getElementById('quick-resource-count').innerText = resources.length;
+      document.getElementById('quick-lab-count').innerText = Object.keys(sampleExperiments).length;
+      document.getElementById('quick-profile-info').innerText = `${userProfile.name} · ${userProfile.degree}`;
+    }
+
+    // --- MODULES CONTROLLER ---
+    function renderModules() {
+      const search = document.getElementById('module-search').value.toLowerCase();
+      const cat = document.getElementById('module-filter-category').value;
+      const grid = document.getElementById('modules-grid');
+
+      const filtered = modules.filter(m => {
+        const matchesSearch = m.title.toLowerCase().includes(search) || m.topic.toLowerCase().includes(search) || m.desc.toLowerCase().includes(search);
+        const matchesCat = cat === 'All' || m.category === cat;
+        return matchesSearch && matchesCat;
+      });
+
+      grid.innerHTML = filtered.map(m => `
+        <article class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-5">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20">${m.category}</span>
+              <span class="text-xs text-slate-500 font-mono">${m.topic}</span>
+            </div>
+            <h3 class="text-lg font-bold text-white">${m.title}</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">${m.desc}</p>
+          </div>
+          <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+            <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Module Resources</p>
+            <ul class="space-y-3">
+              ${m.pdf ? `<li><a href="${m.pdf}" data-open-pdf="true" class="inline-flex items-start gap-2 text-sm font-medium text-brand-400 hover:text-brand-300"><i class="fa-solid fa-file-pdf mt-0.5 text-red-400"></i><span>Open module PDF</span></a></li>` : ''}
+              ${m.youtube ? `<li><a href="${m.youtube}" target="_blank" rel="noopener noreferrer" class="inline-flex items-start gap-2 text-sm font-medium text-brand-400 hover:text-brand-300"><i class="fa-brands fa-youtube mt-0.5 text-red-500"></i><span>Watch YouTube videos</span></a></li>` : ''}
+            </ul>
+          </div>
+          <div class="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+            <span class="text-xs text-slate-500"><i class="fa-solid fa-graduation-cap mr-1"></i> MBU Data Science Curriculum</span>
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('lab')" class="text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors">Practice in Lab <i class="fa-solid fa-arrow-right ml-1"></i></button>
+              <button aria-label="Delete ${m.title}" onclick="deleteModule(${m.id})" class="text-slate-500 hover:text-red-400 text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function handleAddModule(e) {
+      e.preventDefault();
+      const youtube = document.getElementById('mod-youtube').value.trim();
+      const newMod = {
+        id: Date.now(),
+        title: document.getElementById('mod-title').value,
+        topic: document.getElementById('mod-topic').value,
+        category: document.getElementById('mod-category').value,
+        desc: document.getElementById('mod-desc').value,
+        pdf: document.getElementById('mod-pdf').value.trim(),
+        youtube: youtube || ''
+      };
+      modules.unshift(newMod);
+      localStorage.setItem('mbu_ds_modules', JSON.stringify(modules));
+      renderModules();
+      updateMetrics();
+      toggleModal('module-modal');
+      document.getElementById('form-add-module').reset();
+    }
+
+    function deleteModule(id) {
+      modules = modules.filter(m => m.id !== id);
+      localStorage.setItem('mbu_ds_modules', JSON.stringify(modules));
+      renderModules();
+      updateMetrics();
+    }
+
+    // --- TOOLS CONTROLLER ---
+    function renderTools() {
+      const search = document.getElementById('tool-search').value.toLowerCase();
+      const type = document.getElementById('tool-filter-type').value;
+      const grid = document.getElementById('tools-grid');
+
+      const filtered = tools.filter(t => {
+        const matchesSearch = t.name.toLowerCase().includes(search) || t.desc.toLowerCase().includes(search);
+        const matchesType = type === 'All' || t.category === type;
+        return matchesSearch && matchesType;
+      });
+
+      grid.innerHTML = filtered.map(t => `
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 text-brand-400 flex items-center justify-center text-xl">
+              <i class="${t.icon}"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-white">${t.name}</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">${t.category}</span>
+            </div>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed">${t.desc}</p>
+          <div class="bg-slate-950 p-3 rounded-xl font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-900">
+            <pre><code>${t.snippet}</code></pre>
+          </div>
+          ${t.docs ? `<a href="${t.docs}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-400 hover:text-brand-300"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>${t.docsLabel || 'View Documentation'}</span></a>` : ''}
+        </div>
+      `).join('');
+    }
+
+    // --- RESOURCES CONTROLLER ---
+    function renderResources() {
+      const search = document.getElementById('resource-search').value.toLowerCase();
+      const type = document.getElementById('resource-filter-type').value;
+      const grid = document.getElementById('resources-grid');
+
+      const filtered = resources.filter(r => {
+        const matchesSearch = r.title.toLowerCase().includes(search) || r.tag.toLowerCase().includes(search);
+        const matchesType = type === 'All' || r.type === type;
+        return matchesSearch && matchesType;
+      });
+
+      grid.innerHTML = filtered.map(r => `
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-md text-xs font-semibold ${r.type==='PDF'?'bg-red-500/10 text-red-400 border border-red-500/20':r.type==='Video'?'bg-amber-500/10 text-amber-400 border border-amber-500/20':'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${r.type}</span>
+              <span class="text-xs text-slate-500 font-medium">#${r.tag}</span>
+            </div>
+            <h3 class="text-lg font-bold text-white">${r.title}</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">${r.desc}</p>
+          </div>
+          <div class="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+            ${r.fileId ? `<button type="button" onclick="openUploadedResource(${r.id})" class="text-brand-400 hover:text-brand-300 text-xs font-semibold">Open ${r.fileName}</button>` : `<a href="${r.url}" ${r.type === 'PDF' ? 'data-open-pdf="true"' : 'target="_blank" rel="noopener noreferrer"'} class="text-brand-400 hover:text-brand-300 text-xs font-semibold">Open Resource <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>`}
+            <button onclick="deleteResource(${r.id})" class="text-slate-500 hover:text-red-400 text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openResourceFileDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('mbu-ds-resource-files', 1);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore('files');
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('Could not open file storage.'));
+      });
+    }
+
+    async function saveResourceFile(fileId, file) {
+      const database = await openResourceFileDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = database.transaction('files', 'readwrite');
+        transaction.objectStore('files').put(file, fileId);
+        transaction.oncomplete = () => {
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => {
+          database.close();
+          reject(transaction.error || new Error('Could not save the uploaded file.'));
+        };
+        transaction.onabort = () => {
+          database.close();
+          reject(transaction.error || new Error('File storage transaction was cancelled.'));
+        };
+      });
+    }
+
+    const pdfReaderState = {
+      generation: 0,
+      document: null,
+      pageFlip: null,
+      renderTasks: new Map(),
+      pageRenderPromises: new Map(),
+      renderedPages: new Set(),
+      originalUrl: '',
+      blobUrlToRevoke: '',
+      previousBodyOverflow: '',
+      returnFocus: null,
+      currentPage: 0
+    };
+
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    function pdfReaderElements() {
+      const reader = document.getElementById('pdf-reader');
+      const stage = reader.querySelector('.pdf-reader-stage');
+      const status = document.getElementById('pdf-reader-status');
+      let book = document.getElementById('pdf-flipbook');
+      if (!book) {
+        book = document.createElement('div');
+        book.id = 'pdf-flipbook';
+        book.setAttribute('aria-label', 'PDF pages');
+        stage.insertBefore(book, status);
+      }
+      return {
+        reader,
+        title: document.getElementById('pdf-reader-title'),
+        status,
+        book,
+        count: document.getElementById('pdf-page-count'),
+        previous: document.getElementById('pdf-reader-previous'),
+        next: document.getElementById('pdf-reader-next'),
+        original: document.getElementById('pdf-reader-original')
+      };
+    }
+
+    function setPdfReaderStatus(message, isError = false) {
+      const status = pdfReaderElements().status;
+      status.textContent = message;
+      status.classList.toggle('text-red-300', isError);
+      status.hidden = false;
+    }
+
+    function pdfReaderIsPortrait() {
+      return pdfReaderState.pageFlip
+        ? pdfReaderState.pageFlip.getOrientation() === 'portrait'
+        : window.matchMedia('(max-width: 640px)').matches;
+    }
+
+    function updatePdfReaderControls(pageIndex = pdfReaderState.currentPage) {
+      if (!pdfReaderState.document) return;
+      const { count, previous, next } = pdfReaderElements();
+      const total = pdfReaderState.document.numPages;
+      const firstPage = Math.min(pageIndex + 1, total);
+      const lastPage = Math.min(pageIndex + (pdfReaderIsPortrait() ? 1 : 2), total);
+      count.textContent = firstPage === lastPage
+        ? `Page ${firstPage} of ${total}`
+        : `Pages ${firstPage}–${lastPage} of ${total}`;
+      previous.disabled = pageIndex <= 0;
+      next.disabled = pageIndex >= total - (pdfReaderIsPortrait() ? 1 : 2);
+    }
+
+    async function renderPdfReaderPage(pageNumber, generation) {
+      if (generation !== pdfReaderState.generation || !pdfReaderState.document ||
+          pageNumber < 1 || pageNumber > pdfReaderState.document.numPages ||
+          pdfReaderState.renderedPages.has(pageNumber)) return;
+      if (pdfReaderState.pageRenderPromises.has(pageNumber)) {
+        await pdfReaderState.pageRenderPromises.get(pageNumber);
+        return;
+      }
+
+      const pageElement = document.querySelector(`#pdf-flipbook [data-page-number="${pageNumber}"]`);
+      if (!pageElement) return;
+
+      const renderPromise = (async () => {
+        const page = await pdfReaderState.document.getPage(pageNumber);
+        if (generation !== pdfReaderState.generation) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth = Math.max(240, pageElement.clientWidth - 32);
+        const availableHeight = Math.max(320, pageElement.clientHeight - 32);
+        const scale = Math.min(1.6, availableWidth / baseViewport.width, availableHeight / baseViewport.height);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = page.getViewport({ scale: scale * pixelRatio });
+        const canvas = document.createElement('canvas');
+        canvas.setAttribute('aria-label', `Page ${pageNumber}`);
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        canvas.style.width = `${viewport.width / pixelRatio}px`;
+        canvas.style.height = `${viewport.height / pixelRatio}px`;
+        pageElement.replaceChildren(canvas);
+        const renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport });
+        pdfReaderState.renderTasks.set(pageNumber, renderTask);
+        await renderTask.promise;
+        if (generation === pdfReaderState.generation) {
+          pdfReaderState.renderedPages.add(pageNumber);
+          page.cleanup();
+        }
+      })();
+
+      pdfReaderState.pageRenderPromises.set(pageNumber, renderPromise);
+      try {
+        await renderPromise;
+      } finally {
+        if (pdfReaderState.pageRenderPromises.get(pageNumber) === renderPromise) {
+          pdfReaderState.pageRenderPromises.delete(pageNumber);
+        }
+        pdfReaderState.renderTasks.delete(pageNumber);
+      }
+    }
+
+    async function renderPagesNear(pageIndex, generation) {
+      const portrait = pdfReaderIsPortrait();
+      const total = pdfReaderState.document.numPages;
+      const visiblePageCount = portrait ? 1 : 2;
+      const firstVisible = Math.min(pageIndex + 1, total);
+      const lastVisible = Math.min(pageIndex + visiblePageCount, total);
+      const keepStart = Math.max(1, firstVisible - visiblePageCount);
+      const keepEnd = Math.min(total, lastVisible + visiblePageCount);
+
+      for (let pageNumber = keepStart; pageNumber <= keepEnd; pageNumber++) {
+        await renderPdfReaderPage(pageNumber, generation);
+        if (generation !== pdfReaderState.generation) return;
+      }
+
+      document.querySelectorAll('#pdf-flipbook [data-page-number]').forEach(pageElement => {
+        const pageNumber = Number(pageElement.dataset.pageNumber);
+        if (pageNumber < keepStart || pageNumber > keepEnd) {
+          pageElement.replaceChildren();
+          pdfReaderState.renderedPages.delete(pageNumber);
+        }
+      });
+
+      if (generation === pdfReaderState.generation) {
+        pdfReaderElements().status.hidden = true;
+      }
+    }
+
+    function handlePdfReaderFlip(event) {
+      const generation = pdfReaderState.generation;
+      pdfReaderState.currentPage = event.data;
+      updatePdfReaderControls(event.data);
+      renderPagesNear(event.data, generation).catch(error => {
+        if (generation !== pdfReaderState.generation ||
+            error.name === 'RenderingCancelledException') return;
+        console.error('Unable to render PDF pages:', error);
+        setPdfReaderStatus('Some pages could not be rendered. Try reopening the PDF.', true);
+      });
+    }
+
+    async function openPdfFlipbook(url, title, options = {}) {
+      closePdfFlipbook();
+      const generation = pdfReaderState.generation;
+      const { reader, title: titleElement, book, original } = pdfReaderElements();
+      pdfReaderState.returnFocus = document.activeElement;
+      pdfReaderState.previousBodyOverflow = document.body.style.overflow;
+      pdfReaderState.originalUrl = options.originalUrl || url;
+      pdfReaderState.blobUrlToRevoke = options.revokeOnClose ? url : '';
+      pdfReaderState.currentPage = 0;
+      reader.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      titleElement.textContent = title || 'PDF Flipbook';
+      original.href = pdfReaderState.originalUrl;
+      book.classList.remove('pdf-single-page');
+      book.replaceChildren();
+      pdfReaderElements().previous.disabled = true;
+      pdfReaderElements().next.disabled = true;
+      pdfReaderElements().count.textContent = 'Loading pages…';
+      setPdfReaderStatus('Loading PDF…');
+      document.getElementById('pdf-reader-close-top').focus();
+
+      if (!window.pdfjsLib || !window.St || !window.St.PageFlip) {
+        setPdfReaderStatus('The PDF reader libraries could not load. Check your internet connection, then reload the page.', true);
+        return;
+      }
+
+      try {
+        const loadingTask = window.pdfjsLib.getDocument({ url });
+        const pdfDocument = await loadingTask.promise;
+        if (generation !== pdfReaderState.generation) {
+          await pdfDocument.destroy();
+          return;
+        }
+        pdfReaderState.document = pdfDocument;
+        const pageCount = pdfDocument.numPages;
+        const pageWidth = 480;
+        const pageHeight = 660;
+        book.innerHTML = Array.from({ length: pageCount }, (_, index) =>
+          `<div class="pdf-flip-page" data-page-number="${index + 1}" style="width:${pageWidth}px;height:${pageHeight}px"></div>`
+        ).join('');
+
+        if (pageCount === 1) {
+          book.classList.add('pdf-single-page');
+          await renderPdfReaderPage(1, generation);
+          if (generation !== pdfReaderState.generation) return;
+          pdfReaderElements().status.hidden = true;
+          updatePdfReaderControls(0);
+          return;
+        }
+
+        await renderPagesNear(0, generation);
+        if (generation !== pdfReaderState.generation) return;
+
+        const pageFlip = new window.St.PageFlip(book, {
+          width: pageWidth,
+          height: pageHeight,
+          size: 'stretch',
+          minWidth: 260,
+          maxWidth: 520,
+          minHeight: 360,
+          maxHeight: 720,
+          autoSize: true,
+          usePortrait: true,
+          showCover: false,
+          mobileScrollSupport: false,
+          drawShadow: true,
+          flippingTime: 700,
+          maxShadowOpacity: 0.35
+        });
+        pdfReaderState.pageFlip = pageFlip;
+        pageFlip.loadFromHTML(book.querySelectorAll('.pdf-flip-page'));
+        pageFlip.on('flip', handlePdfReaderFlip);
+        pageFlip.turnToPage(0);
+        pdfReaderState.currentPage = 0;
+        updatePdfReaderControls(pageFlip.getCurrentPageIndex());
+      } catch (error) {
+        if (generation !== pdfReaderState.generation) return;
+        console.error('Unable to open PDF in flipbook:', error);
+        const localFileHint = location.protocol === 'file:'
+          ? ' Run the site through a local web server (for example, VS Code Live Server); browsers block PDF.js from reading local file URLs.'
+          : ' The PDF host may block cross-origin access; host the PDF on this site or enable CORS for the PDF URL.';
+        setPdfReaderStatus(`This PDF could not be loaded.${localFileHint}`, true);
+        pdfReaderElements().count.textContent = 'PDF unavailable';
+      }
+    }
+
+    function closePdfFlipbook() {
+      pdfReaderState.generation += 1;
+      pdfReaderState.renderTasks.forEach(task => {
+        if (task && typeof task.cancel === 'function') task.cancel();
+      });
+      pdfReaderState.renderTasks.clear();
+      pdfReaderState.pageRenderPromises.clear();
+      if (pdfReaderState.pageFlip) {
+        pdfReaderState.pageFlip.destroy();
+        pdfReaderState.pageFlip = null;
+      }
+      if (pdfReaderState.document) {
+        pdfReaderState.document.destroy().catch(error => console.warn('PDF cleanup failed:', error));
+        pdfReaderState.document = null;
+      }
+      const { reader, book } = pdfReaderElements();
+      reader.classList.add('hidden');
+      book.replaceChildren();
+      book.classList.remove('pdf-single-page');
+      document.body.style.overflow = pdfReaderState.previousBodyOverflow;
+      if (pdfReaderState.blobUrlToRevoke) {
+        URL.revokeObjectURL(pdfReaderState.blobUrlToRevoke);
+        pdfReaderState.blobUrlToRevoke = '';
+      }
+      pdfReaderState.renderedPages.clear();
+      pdfReaderState.currentPage = 0;
+      if (pdfReaderState.returnFocus && typeof pdfReaderState.returnFocus.focus === 'function') {
+        pdfReaderState.returnFocus.focus({ preventScroll: true });
+      }
+      pdfReaderState.returnFocus = null;
+    }
+
+    function isPdfLink(anchor) {
+      if (anchor.hasAttribute('download')) return false;
+      if (anchor.dataset.openPdf === 'true') return true;
+      try {
+        return new URL(anchor.href, location.href).pathname.toLowerCase().endsWith('.pdf');
+      } catch {
+        return false;
+      }
+    }
+
+    document.addEventListener('click', event => {
+      const anchor = event.target.closest && event.target.closest('a[href]');
+      if (!anchor || !isPdfLink(anchor)) return;
+      event.preventDefault();
+      const title = anchor.closest('article, .glass-card')?.querySelector('h3')?.textContent.trim()
+        || anchor.textContent.trim()
+        || 'PDF Flipbook';
+      openPdfFlipbook(anchor.href, title);
+    }, true);
+
+    document.getElementById('pdf-reader-previous').addEventListener('click', () => {
+      if (pdfReaderState.pageFlip && !pdfReaderElements().previous.disabled) {
+        pdfReaderState.pageFlip.flipPrev();
+      }
+    });
+    document.getElementById('pdf-reader-next').addEventListener('click', () => {
+      if (pdfReaderState.pageFlip && !pdfReaderElements().next.disabled) {
+        pdfReaderState.pageFlip.flipNext();
+      }
+    });
+    document.getElementById('pdf-reader-close').addEventListener('click', closePdfFlipbook);
+    document.getElementById('pdf-reader-close-top').addEventListener('click', closePdfFlipbook);
+    document.addEventListener('keydown', event => {
+      if (pdfReaderElements().reader.classList.contains('hidden')) return;
+      const target = event.target;
+      if (target instanceof HTMLElement &&
+          (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closePdfFlipbook();
+      } else if (event.key === 'ArrowLeft' && pdfReaderState.pageFlip && !pdfReaderElements().previous.disabled) {
+        event.preventDefault();
+        pdfReaderState.pageFlip.flipPrev();
+      } else if (event.key === 'ArrowRight' && pdfReaderState.pageFlip && !pdfReaderElements().next.disabled) {
+        event.preventDefault();
+        pdfReaderState.pageFlip.flipNext();
+      }
+    });
+
+    function openUploadedResource(resourceId) {
+      const resource = resources.find(item => item.id === resourceId);
+      if (!resource || !resource.fileId) {
+        alert('This uploaded file is not available.');
+        return;
+      }
+
+      openResourceFileDatabase().then(database => new Promise((resolve, reject) => {
+        const transaction = database.transaction('files', 'readonly');
+        const request = transaction.objectStore('files').get(resource.fileId);
+        request.onsuccess = () => resolve({ database, file: request.result });
+        request.onerror = () => reject(request.error || new Error('Could not read the uploaded file.'));
+      })).then(({ database, file }) => {
+        database.close();
+        if (!file) {
+          throw new Error('The uploaded file could not be found in browser storage.');
+        }
+        const fileUrl = URL.createObjectURL(file);
+        if (/\.pdf$/i.test(resource.fileName || '') || file.type === 'application/pdf') {
+          openPdfFlipbook(fileUrl, resource.title || resource.fileName, { revokeOnClose: true });
+        } else {
+          window.open(fileUrl, '_blank', 'noopener,noreferrer');
+        }
+      }).catch(error => {
+        console.error('Unable to open uploaded resource:', error);
+        alert(error.message || 'Unable to open the uploaded file.');
+      });
+    }
+
+    async function handleAddResource(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('res-file');
+      const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+      const url = document.getElementById('res-url').value.trim();
+      const errorMessage = document.getElementById('resource-form-error');
+      errorMessage.textContent = '';
+
+      if (!url && !file) {
+        errorMessage.textContent = 'Enter a resource URL or choose a file to upload.';
+        return;
+      }
+
+      const newRes = {
+        id: Date.now(),
+        title: document.getElementById('res-title').value,
+        type: document.getElementById('res-type').value,
+        tag: document.getElementById('res-tag').value,
+        url,
+        desc: document.getElementById('res-desc').value
+      };
+
+      if (file) {
+        newRes.fileId = `resource-${newRes.id}`;
+        newRes.fileName = file.name;
+        try {
+          await saveResourceFile(newRes.fileId, file);
+        } catch (error) {
+          console.error('Unable to save uploaded resource:', error);
+          errorMessage.textContent = 'The file could not be saved in browser storage. Try a smaller file or add a web link instead.';
+          return;
+        }
+      }
+
+      resources.unshift(newRes);
+      localStorage.setItem('mbu_ds_resources', JSON.stringify(resources));
+      renderResources();
+      updateMetrics();
+      toggleModal('resource-modal');
+      document.getElementById('form-add-resource').reset();
+    }
+
+    function deleteResource(id) {
+      resources = resources.filter(r => r.id !== id);
+      localStorage.setItem('mbu_ds_resources', JSON.stringify(resources));
+      renderResources();
+      updateMetrics();
+    }
+
+    // --- INTERACTIVE LAB CONTROLLER ---
+    function loadPresetExperiment(key) {
+      if (key && sampleExperiments[key]) {
+        document.getElementById('code-editor').value = sampleExperiments[key];
+        document.getElementById('lab-exp-title').value = key.replace('exp-', '').toUpperCase() + ' Simulation';
+      }
+    }
+
+    function runCode() {
+      const code = document.getElementById('code-editor').value;
+      const consoleOut = document.getElementById('console-output');
+      consoleOut.innerHTML = '';
+
+      // Override console.log to output directly to sandbox UI
+      const originalLog = console.log;
+      console.log = function (...args) {
+        const line = document.createElement('div');
+        line.className = 'text-emerald-400 font-mono';
+        line.innerText = '> ' + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : a).join(' ');
+        consoleOut.appendChild(line);
+      };
+
+      try {
+        const runFn = new Function(code);
+        runFn();
+      } catch (err) {
+        const errorLine = document.createElement('div');
+        errorLine.className = 'text-rose-400 font-mono font-semibold';
+        errorLine.innerText = 'Execution Error: ' + err.message;
+        consoleOut.appendChild(errorLine);
+      } finally {
+        console.log = originalLog;
+      }
+    }
+
+    function clearConsole() {
+      document.getElementById('console-output').innerHTML = '<div class="text-slate-500 italic">> Console cleared.</div>';
+    }
+
+    function saveCurrentExperiment() {
+      const title = document.getElementById('lab-exp-title').value || 'Untitled Script';
+      const code = document.getElementById('code-editor').value;
+
+      const newExp = { id: Date.now(), title, code };
+      savedExperiments.unshift(newExp);
+      localStorage.setItem('mbu_ds_experiments', JSON.stringify(savedExperiments));
+      renderSavedExperiments();
+      updateMetrics();
+    }
+
+    function renderSavedExperiments() {
+      const list = document.getElementById('saved-experiments-list');
+      if (savedExperiments.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500 italic">No saved experiments yet.</p>`;
+        return;
+      }
+
+      list.innerHTML = savedExperiments.map(exp => `
+        <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between hover:border-brand-500/40 transition-all">
+          <div class="cursor-pointer flex-grow mr-2" onclick="loadSavedExp(${exp.id})">
+            <h5 class="text-xs font-semibold text-slate-200 truncate">${exp.title}</h5>
+            <span class="text-[10px] text-slate-500">Saved Script</span>
+          </div>
+          <button onclick="deleteSavedExp(${exp.id})" class="text-slate-500 hover:text-red-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `).join('');
+    }
+
+    function loadSavedExp(id) {
+      const exp = savedExperiments.find(e => e.id === id);
+      if (exp) {
+        document.getElementById('lab-exp-title').value = exp.title;
+        document.getElementById('code-editor').value = exp.code;
+      }
+    }
+
+    function deleteSavedExp(id) {
+      savedExperiments = savedExperiments.filter(e => e.id !== id);
+      localStorage.setItem('mbu_ds_experiments', JSON.stringify(savedExperiments));
+      renderSavedExperiments();
+      updateMetrics();
+    }
+
+    // --- USER PROFILE CONTROLLER ---
+    function setProfileField(elementId, value) {
+      document.getElementById(elementId).innerText = value || 'Not provided';
+    }
+
+    function renderProfileLink(elementId, url) {
+      const link = document.getElementById(elementId);
+      let safeUrl = '';
+      try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:') {
+          safeUrl = parsedUrl.href;
+        }
+      } catch {
+        safeUrl = '';
+      }
+      link.href = safeUrl;
+      link.classList.toggle('hidden', !safeUrl);
+      link.classList.toggle('inline-flex', !!safeUrl);
+    }
+
+    function renderProfile() {
+      document.getElementById('nav-user-name').innerText = userProfile.name;
+      document.getElementById('nav-profile-img').src = userProfile.photo;
+      document.getElementById('quick-profile-info').innerText = `${userProfile.name} · ${userProfile.degree}`;
+
+      document.getElementById('profile-name-heading').innerText = userProfile.name;
+      document.getElementById('profile-img-display').src = userProfile.photo;
+      document.getElementById('profile-program-heading').innerText = userProfile.degree;
+      document.getElementById('profile-institution-heading').innerText = userProfile.institution;
+
+      setProfileField('disp-profile-name', userProfile.name);
+      setProfileField('disp-profile-roll', userProfile.roll);
+      setProfileField('disp-profile-semester', userProfile.semester);
+      setProfileField('disp-profile-faculty', userProfile.faculty);
+      setProfileField('disp-profile-degree', userProfile.degree);
+      setProfileField('disp-profile-branch', userProfile.branch);
+      setProfileField('disp-profile-specialization', userProfile.specialization);
+      setProfileField('disp-profile-institution', userProfile.institution);
+      setProfileField('disp-profile-bio', userProfile.bio);
+
+      const emailLink = document.getElementById('disp-profile-email');
+      emailLink.innerText = userProfile.email || 'Not provided';
+      emailLink.href = userProfile.email ? `mailto:${userProfile.email}` : '';
+      renderProfileLink('disp-profile-linkedin', userProfile.linkedin);
+      renderProfileLink('disp-profile-github', userProfile.github);
+      renderProfileLink('disp-profile-resume', userProfile.resume);
+      document.getElementById('disp-profile-links-empty').classList.toggle(
+        'hidden',
+        Boolean(userProfile.linkedin || userProfile.github || userProfile.resume)
+      );
+    }
+
+    function toggleEditProfileModal() {
+      document.getElementById('input-prof-name').value = userProfile.name;
+      document.getElementById('input-prof-roll').value = userProfile.roll;
+      document.getElementById('input-prof-degree').value = userProfile.degree;
+      document.getElementById('input-prof-semester').value = userProfile.semester;
+      document.getElementById('input-prof-faculty').value = userProfile.faculty;
+      document.getElementById('input-prof-institution').value = userProfile.institution;
+      document.getElementById('input-prof-email').value = userProfile.email;
+      document.getElementById('input-prof-branch').value = userProfile.branch;
+      document.getElementById('input-prof-specialization').value = userProfile.specialization;
+      document.getElementById('input-prof-linkedin').value = userProfile.linkedin;
+      document.getElementById('input-prof-github').value = userProfile.github;
+      document.getElementById('input-prof-resume').value = userProfile.resume;
+      document.getElementById('input-prof-bio').value = userProfile.bio;
+
+      toggleModal('profile-modal');
+    }
+
+    function handleSaveProfile(e) {
+      e.preventDefault();
+      userProfile.name = document.getElementById('input-prof-name').value;
+      userProfile.roll = document.getElementById('input-prof-roll').value;
+      userProfile.degree = document.getElementById('input-prof-degree').value;
+      userProfile.semester = document.getElementById('input-prof-semester').value.trim();
+      userProfile.faculty = document.getElementById('input-prof-faculty').value.trim();
+      userProfile.institution = document.getElementById('input-prof-institution').value;
+      userProfile.email = document.getElementById('input-prof-email').value;
+      userProfile.branch = document.getElementById('input-prof-branch').value.trim();
+      userProfile.specialization = document.getElementById('input-prof-specialization').value.trim();
+      userProfile.linkedin = document.getElementById('input-prof-linkedin').value.trim();
+      userProfile.github = document.getElementById('input-prof-github').value.trim();
+      userProfile.resume = document.getElementById('input-prof-resume').value.trim();
+      userProfile.bio = document.getElementById('input-prof-bio').value;
+
+      localStorage.setItem('mbu_ds_profile', JSON.stringify(userProfile));
+      renderProfile();
+      toggleModal('profile-modal');
+    }
+
+    function handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          userProfile.photo = evt.target.result;
+          localStorage.setItem('mbu_ds_profile', JSON.stringify(userProfile));
+          renderProfile();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- APPLICATION INITIALIZATION ---
+    window.onload = function () {
+      switchTab('home');
+      renderModules();
+      renderTools();
+      renderResources();
+      renderSavedExperiments();
+      renderProfile();
+      updateMetrics();
+
+      // Default initial experiment setup
+      loadPresetExperiment('exp-stats');
+    };
+  </script>
+</body>
+</html>
