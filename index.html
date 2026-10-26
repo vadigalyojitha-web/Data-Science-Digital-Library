@@ -725,29 +725,19 @@
             <div class="absolute inset-0 bg-black/20"></div>
           </div>
 
-          <!-- Profile Details & Edit Area -->
+          <!-- Profile Details -->
           <div class="px-6 sm:px-10 pb-10 relative">
             
             <!-- Photo & Primary Info Header -->
             <div class="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-6 -mt-16 sm:-mt-20 mb-8">
-              <div class="relative group">
+              <div>
                 <img id="profile-img-display" src="student-profile.jpg" alt="Profile Picture" class="w-32 h-32 rounded-2xl object-cover border-4 border-slate-950 shadow-xl bg-slate-900">
-                <label for="profile-photo-input" class="absolute bottom-2 right-2 bg-brand-600 hover:bg-brand-500 text-white p-2 rounded-xl shadow-lg cursor-pointer transition-all">
-                  <i class="fa-solid fa-camera text-xs"></i>
-                </label>
-                <input type="file" id="profile-photo-input" accept="image/*" onchange="handlePhotoUpload(event)" class="hidden">
               </div>
 
               <div class="text-center sm:text-left flex-grow">
                 <h2 id="profile-name-heading" class="text-2xl sm:text-3xl font-bold text-white">V.S.Yojitha</h2>
                 <p id="profile-program-heading" class="text-brand-400 font-medium text-sm">B.Tech - CSE (Data Science)</p>
                 <p id="profile-institution-heading" class="text-slate-400 text-xs">Mohan Babu University (MBU)</p>
-              </div>
-
-              <div>
-                <button onclick="toggleEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition-all flex items-center space-x-2">
-                  <i class="fa-solid fa-pen-to-square"></i><span>Edit Profile</span>
-                </button>
               </div>
             </div>
 
@@ -819,7 +809,7 @@
                 <a id="disp-profile-linkedin" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>
                 <a id="disp-profile-github" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-brands fa-github"></i> GitHub</a>
                 <a id="disp-profile-resume" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:text-brand-300"><i class="fa-solid fa-file-lines"></i> Resume</a>
-                <span id="disp-profile-links-empty" class="text-sm text-slate-500">Add LinkedIn, GitHub, or resume links using Edit Profile.</span>
+                <span id="disp-profile-links-empty" class="text-sm text-slate-500">No professional links have been added.</span>
               </div>
             </div>
 
@@ -961,87 +951,6 @@
         <div class="pt-2 flex justify-end space-x-3">
           <button type="button" onclick="toggleModal('resource-modal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm">Cancel</button>
           <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm">Save Resource</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: EDIT PROFILE -->
-  <div id="profile-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-slate-800 space-y-4 relative">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-user-pen text-brand-500"></i><span>Edit Student Profile</span>
-        </h3>
-        <button onclick="toggleEditProfileModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <form id="form-edit-profile" onsubmit="handleSaveProfile(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Full Name</label>
-          <input type="text" id="input-prof-name" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Roll / Student ID</label>
-            <input type="text" id="input-prof-roll" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Degree Program</label>
-            <input type="text" id="input-prof-degree" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Current Semester / Year</label>
-            <input type="text" id="input-prof-semester" placeholder="e.g. 3rd Year" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Faculty Name</label>
-            <input type="text" id="input-prof-faculty" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Institution Name</label>
-            <input type="text" id="input-prof-institution" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Email</label>
-            <input type="email" id="input-prof-email" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Branch</label>
-            <input type="text" id="input-prof-branch" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Specialization</label>
-            <input type="text" id="input-prof-specialization" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">LinkedIn URL</label>
-            <input type="text" inputmode="url" id="input-prof-linkedin" placeholder="https://linkedin.com/in/..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">GitHub URL</label>
-            <input type="text" inputmode="url" id="input-prof-github" placeholder="https://github.com/..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Resume URL</label>
-            <input type="text" inputmode="url" id="input-prof-resume" placeholder="https://..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Academic Bio</label>
-          <textarea id="input-prof-bio" rows="3" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500"></textarea>
-        </div>
-        <p id="profile-save-status" role="status" aria-live="polite" class="text-sm text-red-400"></p>
-        <div class="pt-2 flex justify-end space-x-3">
-          <button type="button" onclick="toggleEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm">Cancel</button>
-          <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm">Save Profile Changes</button>
         </div>
       </form>
     </div>
@@ -1934,101 +1843,6 @@ for (let iter = 1; iter <= 3; iter++) {
         'hidden',
         Boolean(userProfile.linkedin || userProfile.github || userProfile.resume)
       );
-    }
-
-    function toggleEditProfileModal() {
-      document.getElementById('input-prof-name').value = userProfile.name;
-      document.getElementById('input-prof-roll').value = userProfile.roll;
-      document.getElementById('input-prof-degree').value = userProfile.degree;
-      document.getElementById('input-prof-semester').value = userProfile.semester;
-      document.getElementById('input-prof-faculty').value = userProfile.faculty;
-      document.getElementById('input-prof-institution').value = userProfile.institution;
-      document.getElementById('input-prof-email').value = userProfile.email;
-      document.getElementById('input-prof-branch').value = userProfile.branch;
-      document.getElementById('input-prof-specialization').value = userProfile.specialization;
-      document.getElementById('input-prof-linkedin').value = userProfile.linkedin;
-      document.getElementById('input-prof-github').value = userProfile.github;
-      document.getElementById('input-prof-resume').value = userProfile.resume;
-      document.getElementById('input-prof-bio').value = userProfile.bio;
-
-      toggleModal('profile-modal');
-    }
-
-    function persistUserProfile(profile) {
-      const status = document.getElementById('profile-save-status');
-      try {
-        localStorage.setItem('mbu_ds_profile', JSON.stringify(profile));
-        status.textContent = '';
-        return true;
-      } catch (error) {
-        console.error('Unable to save the student profile to browser storage.', error);
-        status.textContent = 'Could not save your profile in this browser. Check available storage and try again.';
-        return false;
-      }
-    }
-
-    function normalizeProfileUrl(value) {
-      const trimmedValue = value.trim();
-      if (!trimmedValue) return '';
-      const normalizedValue = /^https?:\/\//i.test(trimmedValue)
-        ? trimmedValue
-        : `https://${trimmedValue}`;
-
-      try {
-        const parsedUrl = new URL(normalizedValue);
-        return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:'
-          ? parsedUrl.href
-          : null;
-      } catch {
-        return null;
-      }
-    }
-
-    function handleSaveProfile(e) {
-      e.preventDefault();
-      const profileUrls = {
-        linkedin: normalizeProfileUrl(document.getElementById('input-prof-linkedin').value),
-        github: normalizeProfileUrl(document.getElementById('input-prof-github').value),
-        resume: normalizeProfileUrl(document.getElementById('input-prof-resume').value)
-      };
-      if (Object.values(profileUrls).includes(null)) {
-        document.getElementById('profile-save-status').textContent = 'Enter valid web links for LinkedIn, GitHub, and Resume.';
-        return;
-      }
-
-      const updatedProfile = {
-        ...userProfile,
-        name: document.getElementById('input-prof-name').value.trim(),
-        roll: document.getElementById('input-prof-roll').value.trim(),
-        degree: document.getElementById('input-prof-degree').value.trim(),
-        semester: document.getElementById('input-prof-semester').value.trim(),
-        faculty: document.getElementById('input-prof-faculty').value.trim(),
-        institution: document.getElementById('input-prof-institution').value.trim(),
-        email: document.getElementById('input-prof-email').value.trim(),
-        branch: document.getElementById('input-prof-branch').value.trim(),
-        specialization: document.getElementById('input-prof-specialization').value.trim(),
-        ...profileUrls,
-        bio: document.getElementById('input-prof-bio').value.trim()
-      };
-
-      if (!persistUserProfile(updatedProfile)) return;
-      userProfile = updatedProfile;
-      renderProfile();
-      toggleModal('profile-modal');
-    }
-
-    function handlePhotoUpload(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (evt) {
-          const updatedProfile = { ...userProfile, photo: evt.target.result };
-          if (!persistUserProfile(updatedProfile)) return;
-          userProfile = updatedProfile;
-          renderProfile();
-        };
-        reader.readAsDataURL(file);
-      }
     }
 
     // --- APPLICATION INITIALIZATION ---
