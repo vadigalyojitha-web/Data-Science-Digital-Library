@@ -1016,15 +1016,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">LinkedIn URL</label>
-            <input type="url" id="input-prof-linkedin" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+            <input type="text" inputmode="url" id="input-prof-linkedin" placeholder="https://linkedin.com/in/..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">GitHub URL</label>
-            <input type="url" id="input-prof-github" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+            <input type="text" inputmode="url" id="input-prof-github" placeholder="https://github.com/..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Resume URL</label>
-            <input type="url" id="input-prof-resume" placeholder="https://" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
+            <input type="text" inputmode="url" id="input-prof-resume" placeholder="https://..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-brand-500">
           </div>
         </div>
         <div>
@@ -1970,8 +1970,35 @@ for (let iter = 1; iter <= 3; iter++) {
       }
     }
 
+    function normalizeProfileUrl(value) {
+      const trimmedValue = value.trim();
+      if (!trimmedValue) return '';
+      const normalizedValue = /^https?:\/\//i.test(trimmedValue)
+        ? trimmedValue
+        : `https://${trimmedValue}`;
+
+      try {
+        const parsedUrl = new URL(normalizedValue);
+        return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:'
+          ? parsedUrl.href
+          : null;
+      } catch {
+        return null;
+      }
+    }
+
     function handleSaveProfile(e) {
       e.preventDefault();
+      const profileUrls = {
+        linkedin: normalizeProfileUrl(document.getElementById('input-prof-linkedin').value),
+        github: normalizeProfileUrl(document.getElementById('input-prof-github').value),
+        resume: normalizeProfileUrl(document.getElementById('input-prof-resume').value)
+      };
+      if (Object.values(profileUrls).includes(null)) {
+        document.getElementById('profile-save-status').textContent = 'Enter valid web links for LinkedIn, GitHub, and Resume.';
+        return;
+      }
+
       const updatedProfile = {
         ...userProfile,
         name: document.getElementById('input-prof-name').value.trim(),
@@ -1983,9 +2010,7 @@ for (let iter = 1; iter <= 3; iter++) {
         email: document.getElementById('input-prof-email').value.trim(),
         branch: document.getElementById('input-prof-branch').value.trim(),
         specialization: document.getElementById('input-prof-specialization').value.trim(),
-        linkedin: document.getElementById('input-prof-linkedin').value.trim(),
-        github: document.getElementById('input-prof-github').value.trim(),
-        resume: document.getElementById('input-prof-resume').value.trim(),
+        ...profileUrls,
         bio: document.getElementById('input-prof-bio').value.trim()
       };
 
